@@ -121,8 +121,18 @@ def main():
     print("deliberate breakage → the guards must fail")
     print("=" * 72)
 
-    expect_raise("guard1: delta=0 geom off half px", break_guard1)
-    expect_ok("guard1: passes when intact", M.check_zero_reduces_to_official)
+    # guard1 compares against the official ODL operator; without odl there is
+    # nothing to compare to, so it is skipped rather than reported as a failure.
+    try:
+        import odl  # noqa: F401
+        has_odl = True
+    except ImportError:
+        has_odl = False
+    if has_odl:
+        expect_raise("guard1: delta=0 geom off half px", break_guard1)
+        expect_ok("guard1: passes when intact", M.check_zero_reduces_to_official)
+    else:
+        print("  [--] guard1 skipped: odl is not installed (pip install odl==0.8.1)")
 
     expect_raise("guard3: shift direction reversed", break_guard3_direction)
     expect_raise("guard3: adjoint not transposed", break_guard3_adjoint)

@@ -13,7 +13,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install numpy scipy
+      # odl must stay at 0.8.1 - 1.0 is an API rewrite that moves odl.tomo
+      - run: pip install numpy scipy "odl==0.8.1"
 
       # Every guard is run against a deliberately broken input and must fail
       # for the right reason. The GPU half needs the LoDoPaB files and skips
