@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+data/
+*.hdf5
+*.h5
+runs/
+results/*.npz

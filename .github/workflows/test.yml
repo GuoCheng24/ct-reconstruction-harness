@@ -1,0 +1,33 @@
+name: test
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install numpy scipy
+
+      # Every guard is run against a deliberately broken input and must fail
+      # for the right reason. The GPU half needs the LoDoPaB files and skips
+      # itself here; the CPU half is what has to hold everywhere.
+      - name: guards fail on deliberately broken operators
+        run: python tests/test_mismatch_guards.py
+
+      # This workflow names the patterns it hunts, so it excludes itself -
+      # the same self-match that made the first version of this check fail.
+      - name: no local paths or private identifiers anywhere in the tree
+        run: |
+          if grep -rIn -e '/public/home' -e '/public/share' -e 'chengguo' \
+               --include='*.py' --include='*.md' --include='*.yml' \
+               --exclude-dir='.github' . ; then
+            echo "::error::a local path or private identifier reached the repository"
+            exit 1
+          fi
