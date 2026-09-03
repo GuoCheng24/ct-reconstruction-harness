@@ -133,8 +133,13 @@ def main():
     # machine rather than crashing: the CPU guards above are the ones that must
     # run everywhere, including in CI.
     import os
-    from lodopab import DATA
-    have_data = os.path.exists(f"{DATA}/ground_truth_test_000.hdf5")
+    # lodopab imports h5py at module level, which a clean environment need not
+    # have; the CPU guards below must not depend on it.
+    try:
+        from lodopab import DATA
+        have_data = os.path.exists(f"{DATA}/ground_truth_test_000.hdf5")
+    except ImportError as exc:
+        DATA, have_data = f"<unavailable: {exc}>", False
     if dev and not have_data:
         print()
         print(f"skipping the GPU guards: no LoDoPaB data at {DATA}")
