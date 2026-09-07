@@ -1,5 +1,7 @@
 # inverse-problems-from-scratch
 
+[![test](https://github.com/GuoCheng24/ct-reconstruction-harness/actions/workflows/test.yml/badge.svg)](https://github.com/GuoCheng24/ct-reconstruction-harness/actions/workflows/test.yml)
+
 **Reproduce a published CT reconstruction baseline exactly, then beat it — and
 show every step of both.**
 
