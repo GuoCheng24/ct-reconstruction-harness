@@ -34,6 +34,10 @@ import torch
 import h5py
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Created at import time, not just before the write: these runs take minutes, and a
+# missing output directory used to surface only at the very end, discarding the result.
+RESULTS = os.path.join(HERE, "..", "results")
+os.makedirs(RESULTS, exist_ok=True)
 sys.path.insert(0, HERE)
 from lodopab import psnr, DATA               # noqa: E402
 from tv_adam import poisson_loss             # noqa: E402
@@ -104,7 +108,7 @@ def main():
         print(f"{r['d_px']:>10.2f} {r['d_hat_px']:>10.4f} {r['d_hat_err_px']:>+10.4f} "
               f"{r['oracle']:>9.3f} {r['naive']:>9.3f} {r['selfcal']:>9.3f} "
               f"{r['selfcal']-r['oracle']:>+8.3f}")
-    with open(os.path.join(HERE, "..", "results", "selfcalib.json"), "w") as f:
+    with open(os.path.join(RESULTS, "selfcalib.json"), "w") as f:
         json.dump(out, f, indent=1)
 
 

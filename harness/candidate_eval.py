@@ -14,8 +14,11 @@ Config keys:
 Output: the last line is JSON ({"psnr":..,"ssim":..,"per_image":[..]}), for the caller to parse.
 
 Official operator (odl 0.8.1 + astra_cuda), FBP (Hann, fs=0.1) initialization, best-loss
-tracking -- i.e. the pipeline that already matched the reference numbers (33.83 vs 33.36),
-with only the regularizer and the data term swapped.
+tracking -- the pipeline of the matched official recipe (reg="aniso_tv": 33.00 +- 0.33 on
+128 evaluation images against a published 33.36 on the challenge split; the 33.83 quoted
+earlier was the first 16 images, which run 0.8 dB easy), with only the regularizer and the
+data term swapped. Note the official recipe is *anisotropic* TV (dival's tv_loss); "iso_tv"
+is a candidate, not the baseline.
 """
 import os
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "5")

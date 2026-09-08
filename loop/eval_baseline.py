@@ -20,6 +20,9 @@ import torch
 import h5py
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Created at import time, not just before the write: a missing output directory used to
+# surface only after the whole evaluation had run.
+os.makedirs(os.path.join(HERE, "..", "results"), exist_ok=True)
 sys.path.insert(0, os.path.join(HERE, "..", "harness"))
 sys.path.insert(0, HERE)
 

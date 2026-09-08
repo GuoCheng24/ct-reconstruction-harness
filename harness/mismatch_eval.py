@@ -47,8 +47,9 @@ AXES = {
 }
 
 METHODS = {
-    # official TV recipe (the one that cross-checked at 33.83); TGV is the training-free winner
-    # selected over two loop rounds, 34.51
+    # official TV recipe (33.00 +- 0.33 on 128 evaluation images; the 33.83 quoted earlier was
+    # the first 16, which run 0.8 dB easy); TGV is the training-free winner selected over two
+    # loop rounds, +0.70 dB paired over the recipe at n=128
     "tv":  {"reg": "aniso_tv", "gamma": 20.556, "kw": {}},
     "tgv": {"reg": "tgv2", "gamma": 28.0, "kw": {"ratio": 0.3}},
 }

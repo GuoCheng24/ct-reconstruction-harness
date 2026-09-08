@@ -41,6 +41,10 @@ import torch
 import h5py
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Created at import time, not just before the write: these runs take minutes, and a
+# missing output directory used to surface only at the very end, discarding the result.
+RESULTS = os.path.join(HERE, "..", "results")
+os.makedirs(RESULTS, exist_ok=True)
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", "honesty"))
 from lodopab import DATA                      # noqa: E402
@@ -108,7 +112,7 @@ def main():
         print(f"{r['axis']:<12}{r['delta']:>8.4g}{r['ratio']:>9.4f}"
               f"{r['pred_dB']:>10.2f}{r['harm_dB']:>9.2f}"
               f"{r['pred_dB']-r['harm_dB']:>+8.2f}")
-    with open(os.path.join(HERE, "..", "results", "offmanifold.json"), "w") as f:
+    with open(os.path.join(RESULTS, "offmanifold.json"), "w") as f:
         json.dump({"base": base, "rows": out}, f, indent=1)
 
 

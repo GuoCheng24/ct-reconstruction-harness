@@ -26,6 +26,7 @@ from fast_radon import FastRadon
 from lodopab import load_batch, psnr, ssim, Backprojector, FBP, ramp_filter, DATA
 from tv_adam import TVAdamReconstructor, MU_MAX, N0
 
+os.makedirs(os.path.join(HERE, "..", "results"), exist_ok=True)
 LOG = os.path.join(HERE, "..", "results", "crime_control.txt")
 
 

@@ -9,11 +9,11 @@ ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("
 ax.add_patch(FancyBboxPatch((0.035, 0.055), 0.93, 0.89, boxstyle="round,pad=0,rounding_size=0.02",
                             fc="white", ec="#e4e2dd", lw=1.4))
 ax.text(0.075, 0.80, "ct-reconstruction-harness", fontsize=34, weight="bold", color=INK, va="center")
-ax.text(0.075, 0.705, "Reproduce the LoDoPaB-CT baselines from scratch, then beat a published one",
+ax.text(0.075, 0.705, "Reproduce the LoDoPaB-CT baselines from scratch, then beat one with a paired test",
         fontsize=15.5, color=MUTED, va="center")
-rows = [("FBP", "31.05", "official 30.19"),
-        ("TV-Adam", "33.83", "official 33.36, published gamma untouched"),
-        ("TGV (found by the loop)", "34.51", "published DIP+TV 34.41, held out")]
+rows = [("FBP, official operator", "30.52", "n = 3553, published 30.19 on the challenge split"),
+        ("TV-Adam, official recipe", "33.00", "n = 128, published 33.36, gamma untouched"),
+        ("TGV (found by the loop)", "+0.70", "dB paired over the recipe, t = 16, wins 125/128")]
 y = 0.545
 for name, num, note in rows:
     ax.text(0.075, y, name, fontsize=15, color=INK, va="center")

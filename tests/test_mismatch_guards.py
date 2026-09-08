@@ -150,11 +150,12 @@ def main():
         have_data = os.path.exists(f"{DATA}/ground_truth_test_000.hdf5")
     except ImportError as exc:
         DATA, have_data = f"<unavailable: {exc}>", False
-    if dev and not have_data:
-        print()
-        print(f"skipping the GPU guards: no LoDoPaB data at {DATA}")
-        print("  (set LODOPAB_DIR, or see README for the download)")
-    if dev and have_data:
+    # Guards 2 and 4 build the official ODL operator, so they need odl as much as
+    # guard1 does. Gating them on the data alone reported four failures with
+    # "raised the wrong exception type ModuleNotFoundError" on a machine that has
+    # the dataset but not odl -- a combination CI never sees, because CI has odl
+    # and no data.
+    if dev and have_data and has_odl:
         import h5py
         with h5py.File(f"{DATA}/ground_truth_test_000.hdf5", "r") as h:
             x = torch.tensor(np.array(h["data"][0]).copy(), dtype=torch.float32)
@@ -166,7 +167,10 @@ def main():
         expect_raise("guard4: data-side sign reversed",
                      lambda: break_guard4(x, dev))
     else:
-        print("(no GPU, skipping guards 2/4)")
+        why = ("no GPU" if not dev
+               else f"no LoDoPaB data at {DATA} (set LODOPAB_DIR)" if not have_data
+               else "odl is not installed (pip install odl==0.8.1)")
+        print(f"\n  [--] guards 2/4 skipped: {why}")
 
     print()
     for n, m in PASS:

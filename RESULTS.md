@@ -1,9 +1,20 @@
 # Results
 
 All numbers below were produced by the code in this repository on the public
-LoDoPaB-CT test set, under the official metric convention, with no tuning on
-the evaluation files. Every number is re-derivable; where a published figure
-is quoted for comparison, its source is named.
+LoDoPaB-CT **test** set, under the official metric convention, with no tuning
+on the evaluation files. ± is the standard error over images. Every number is
+re-derivable and the per-image values are in
+[`results/evaluation_n128.json`](results/evaluation_n128.json); where a
+published figure is quoted, it is on the benchmark's **challenge** set, a
+different split, and its source is named.
+
+**Revision note (2026-09-08).** The first version of this file reported FBP
+31.05, TV 33.83 and TGV 34.51 from the first 16 test images. Those 16 are
+0.8 dB easier than the rest, and the FBP row used the TV initialization
+filter (fs 0.1) rather than the official FBP setting (fs 0.641). Everything
+below is re-measured at n = 128 (iterative methods) or n = 3553 (FBP). The
+paired gain of the loop's winner over the matched recipe survived unchanged;
+the absolute claim of passing DIP+TV did not.
 
 ## The setup
 
@@ -17,16 +28,30 @@ The harness owns the ground truth; a method receives observations only.
 
 ## Baselines reproduced
 
-| Method | Ours | Published | Source of the published number |
+| Method | Ours | n | Published (challenge set) |
 |---|---|---|---|
-| FBP (Hann, fs 0.1) | **31.05** | 30.19 | LoDoPaB-CT benchmark |
-| TV (Adam, Poisson NLL, γ = 20.556) | **33.83** | 33.36 | LoDoPaB-CT benchmark |
+| FBP, Hann fs 0.641, **official ODL+ASTRA operator** | **30.52 ± 0.05**, SSIM 0.737 | 3553 | 30.19, SSIM 0.727 |
+| FBP, Hann fs 0.641, the operator in `ops/` | 29.33 ± 0.05, SSIM 0.753 | 3553 | |
+| TV, Adam, Poisson NLL, γ = 20.556, anisotropic (the official recipe) | **33.00 ± 0.33**, SSIM 0.797 | 128 | 33.36, SSIM 0.830 |
+
+fs 0.641 is the official FBP setting (`lodopab_fbp_hyper_params.json`,
+jleuschn/supp.dival); fs 0.1 is the FBP used to *initialize* TV and must not
+be reported as an FBP baseline. The FBP row with the official operator
+reproduces the published implementation to +0.33 dB across the split change,
+which is the size of the test/challenge difference. The `ops/` operator is
+1.19 dB behind the official one on identical images: it is the readable
+one, not the one the TV and TGV rows are computed with. Its single fitted
+calibration scalar moves the number by 0.43 dB depending on whether it is
+fitted on 4 or 64 images (29.33 vs 28.91); the 4-image fit is what the code
+does and what is reported.
 
 The TV number uses the **published γ untouched**. Getting there took seven
 layers of recipe reading; they are logged in [DEBUGGING.md](DEBUGGING.md).
-Both reproductions land slightly above the published figures, which is the
-expected direction for a matched recipe on a fixed test split, and is small
-enough not to be interesting on its own.
+On the test split it lands 0.36 dB below the challenge-split publication,
+with the FBP control suggesting the splits differ by about 0.3 dB in the
+other direction; so the matched recipe is within roughly half a decibel of
+the reference implementation and should not be described as an exact
+match.
 
 ## Search loop, round 1
 
@@ -55,45 +80,53 @@ Calibration ranking:
 | huber δ0.002 @ γ28 | 36.03 | fine-tuning δ yields little (+0.12) |
 | official recipe (control) | 35.49 | |
 
-Held-out confirmation, 16 evaluation files × 5000 iterations, zero tuning contact:
+Held-out confirmation on evaluation file 0, **128 images** × 5000 iterations,
+zero tuning contact. Paired differences are on the same 128 images:
 
-| Configuration | PSNR | SSIM | vs. matched recipe (33.83) |
-|---|---|---|---|
-| **tgv2 r0.3 @ γ28** | **34.51** | 0.817 | **+0.68** |
-| tgv2 r0.5 @ γ20 | 34.44 | 0.817 | +0.61 |
-| huber δ0.002 @ γ28 | 34.18 | 0.816 | +0.35 |
+| Configuration | PSNR | SSIM | paired vs. matched recipe | t | wins |
+|---|---|---|---|---|---|
+| **tgv2 r0.3 @ γ28** | **33.71 ± 0.36** | 0.804 | **+0.70 ± 0.04** | 16.1 | 125/128 |
+| iso_tv @ γ20.556 (the official recipe with isotropic TV) | 33.36 ± 0.34 | 0.801 | +0.36 ± 0.02 | 19.0 | 127/128 |
+| aniso_tv @ γ20.556 (the official recipe) | 33.00 ± 0.33 | 0.797 | — | | |
 
-Per-image PSNR for the winner, so the spread is visible rather than hidden
-behind a mean:
-
-```
-35.52  35.91  30.31  24.62  39.70  38.77  39.73  28.38
-40.28  35.87  27.48  35.79  32.22  40.86  35.63  31.13
-```
+The first 16 of these images, which the previous version of this table used
+on their own, average 34.51 for the winner and 33.83 for the matched recipe:
+0.8 dB above the 128-image means for both, with the paired gain (+0.68 on
+those 16) essentially unchanged. That is the point of pairing.
 
 For context, a published untrained-network result on this benchmark,
-DIP + TV, reports **34.41**. The classical, untrained ceiling in this space
-appears to sit around **34.5**; learned reconstructors occupy 35.4–36.3, and
-that is the real frontier.
+DIP + TV, reports **34.41** on the challenge split. The winner here is
+**below** that at n = 128; the earlier claim of passing it rested on the easy
+subset and is withdrawn. Learned reconstructors occupy 35.4–36.3, and that
+is the real frontier.
 
-### Two findings worth stating separately
+### Three findings worth stating separately
 
 **TGV with ratio < 1 beats the literature convention.** Second-order total
 generalized variation is conventionally used with the ratio of its two
 weights set to 2. On this problem the optimum is well below 1, and the
-effect is large enough to survive held-out confirmation. The convention is
-not wrong so much as untested here.
+effect survives held-out confirmation at n = 128 by sixteen standard errors.
+The convention is not wrong so much as untested here.
+
+**Isotropic TV beats the official anisotropic choice, paired, on 127 of 128
+images (+0.36 ± 0.02 dB).** The reference implementation's `tv_loss` is
+anisotropic; this repository's docstring called the choice an implementation
+preference and predicted isotropic would do better in CT. It does.
 
 **The Poisson likelihood's contribution is its variance weighting, and
-nothing else.** A weighted least-squares data term matched it to 0.07 dB.
-This is a negative result about a modeling choice many pipelines treat as
+nothing else.** On the calibration file (4 images) a weighted least-squares
+data term matched it to 0.07 dB; re-checked paired on 32 evaluation images
+with `tgv2 r0.5 @ γ20`, the difference is −0.03 ± 0.03 dB (p = 0.28). This
+is a negative result about a modeling choice many pipelines treat as
 essential, and it is cheap to act on.
 
 ## Inverse crime control
 
 A three-tier control asks whether these numbers depend on generating our own
 observations. Tier A — observations produced by the official operator, our
-reconstruction — scores **33.66**, i.e. the recipe is not the source of any
+reconstruction — scores **33.66** against 33.83 on the real observations of
+the same 16 images (both first-16 means; the comparison is like for like even
+though those images run easy), i.e. the recipe is not the source of any
 advantage. The benchmark's own simulation is structurally an inverse crime
 setup: the observations are generated by the same discretized operator the
 reconstructor inverts.
@@ -107,8 +140,8 @@ debugging log mattered so much.
 
 ```bash
 export LODOPAB_DIR=/path/to/lodopab       # public dataset
-python harness/run_tvadam_eval.py         # the matched baseline, 33.83
-python harness/candidate_eval.py --config tgv2_r0.3_g28   # the winner, 34.51
+python harness/candidate_eval.py '{"reg":"aniso_tv","data":"poisson","gamma":20.556,"iters":5000,"n":128,"file":0}'   # matched recipe, 33.00
+python harness/candidate_eval.py '{"reg":"tgv2","ratio":0.3,"data":"poisson","gamma":28,"iters":5000,"n":128,"file":0}'  # the winner, 33.71
 ```
 
 Runtime is dominated by the 5000-iteration reconstructions; on one modern GPU

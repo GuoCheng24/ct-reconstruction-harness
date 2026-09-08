@@ -137,7 +137,11 @@ The result is a reproduction that matches the published number without any
 tuning, which is the only state from which an improvement claim means
 anything.
 
-Once there, the search loop found `tgv2 ratio 0.3` at 34.51 dB on held-out
-data — 0.68 dB above the recipe we had just matched, and above the published
-DIP+TV number of 34.41. That gain is worth reporting precisely because
+Once there, the search loop found `tgv2 ratio 0.3` on held-out data —
++0.70 ± 0.04 dB above the recipe we had just matched, paired on 128 images,
+winning 125 of them. (An earlier version of this sentence quoted 34.51 dB and
+"above the published DIP+TV 34.41"; that was the mean of the first 16 images,
+which are 0.8 dB easier than the rest, and at n = 128 the winner sits at
+33.71, below DIP+TV. The paired gain is what survived.) That gain is worth
+reporting precisely because
 everything above it was checked first.

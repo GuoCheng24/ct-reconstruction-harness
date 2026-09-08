@@ -29,6 +29,7 @@ sys.path.insert(0, HERE)
 from lodopab import load_batch, psnr, ssim          # noqa: E402
 from tv_adam import poisson_loss, tv_aniso          # noqa: E402
 
+os.makedirs(os.path.join(HERE, "..", "results"), exist_ok=True)
 LOG = os.path.join(HERE, "..", "results", "official_op.txt")
 
 
