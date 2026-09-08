@@ -120,6 +120,48 @@ with `tgv2 r0.5 @ γ20`, the difference is −0.03 ± 0.03 dB (p = 0.28). This
 is a negative result about a modeling choice many pipelines treat as
 essential, and it is cheap to act on.
 
+## Learned side: operator mismatch on a trained LPD
+
+`learned/` trains the official Learned Primal-Dual recipe (dival architecture,
+n_layer 3, no batch norm, PReLU, Xavier init, opnorm normalization) on the
+3522 validation pairs for 35,220 steps, then applies the same four mismatch
+axes as `harness/mismatch.py` at deployment. 128 test images, file 0
+([`results/lpd_mismatch_n128.json`](results/lpd_mismatch_n128.json)):
+
+| axis | delta | naive | swap (true operator) | self-calibrated | gauge-fixed |
+|---|---|---|---|---|---|
+| — | 0 | **35.10** | | | |
+| cor | 1 px | 28.44 | 35.09 | 35.10 | |
+| cor | 4 px | 21.16 | 35.09 | 35.09 | |
+| rot | 4 steps | 28.29 | 35.09 | | 32.50 |
+| det_scale | 0.5 % | 29.40 | 34.95 | | 34.37 |
+| ang_jitter | 4 steps | 32.79 | **32.64** | | |
+
+Three things the table says. Geometric mismatch is fully removable by giving
+the trained network the right operator, weights untouched; for the
+centre-of-rotation axis the right operator is recoverable from the sinogram
+alone (Helgason–Ludwig first moment, estimate error 0.001–0.003 px), so the
+self-calibrated column is within 0.01 dB of the oracle with no ground truth.
+Per-angle jitter is not removable — it is the one axis that changes the
+information content of the measurement, exactly as `identifiability.py`
+classifies it. And the gauge axes are *not* free for the network the way they
+are for TV: undoing the rotation on the output recovers only part of the loss
+(32.50 vs 35.09), because a CNN is not equivariant.
+
+The gate this direction was built to test — can the consistency residuals,
+computable without ground truth, serve as an error bar for the learned
+method — **fails**: Pearson 0.84 with the measured loss, but a mean absolute
+deviation of 2.4 dB with systematic under-estimation on the gauge axes
+(rot 4 steps: predicted 0.0, measured 6.8). Under-estimation is the unsafe
+direction. Reported as a negative result.
+
+Provenance: this table was first produced on 2026-08-28 with an LPD that had
+five source-only defaults wrong (n_layer 4, batch norm on at batch size 1,
+LeakyReLU, Kaiming init) on 4 images, retracted the same evening, and re-run
+here with the official recipe at n = 128. Re-measuring the mis-configured
+model at n = 128 gives a baseline of 30.76 against the 34.75 its 4-image
+table had shown; the structural conclusions are the same in all three runs.
+
 ## Inverse crime control
 
 A three-tier control asks whether these numbers depend on generating our own

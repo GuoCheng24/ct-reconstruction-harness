@@ -9,3 +9,4 @@ data/
 *.h5
 runs/
 results/*.npz
+learned/runs/

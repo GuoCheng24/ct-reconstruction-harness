@@ -80,9 +80,44 @@ thing here.
 | [`honesty/`](honesty/) | Null-space decomposition: how much of a reconstruction is determined by the data and how much is prior |
 | [`crime/`](crime/) | Inverse-crime control — does the result depend on who generated the observations? |
 | [`loop/`](loop/) | The search loop: propose variants with reasons, sweep, select on calibration, confirm on held-out |
+| [`learned/`](learned/) | The learned side: the official Learned Primal-Dual and FBP+U-Net recipes (dival architectures, hyper-parameters read from the published files, five source-only defaults documented), trained from scratch on the validation split with interruptible checkpoints, and an operator-swappable LPD so that the same mismatch family can be run against a network |
 
 Full numbers, per-image spread, and the findings from round 2 are in
 **[RESULTS.md](RESULTS.md)**.
+
+## What happens to a learned reconstructor when the operator is wrong
+
+The same four mismatch axes, applied at deployment to an LPD trained on the
+official operator, 128 test images
+([`results/lpd_mismatch_n128.json`](results/lpd_mismatch_n128.json)):
+
+```
+                          naive     swap in the        closed-form
+  axis         delta   (wrong op)  true operator   self-calibration
+  cor          4 px     21.16        35.09            35.09      ← baseline 35.10
+  rot          4 steps  28.29        35.09              —
+  det_scale    0.5 %    29.40        34.95              —
+  ang_jitter   4 steps  32.79        32.64              —        ← not recovered
+```
+
+Geometric mismatch is **fully removable**: a 4-pixel centre-of-rotation error
+costs 13.9 dB, swapping the correct operator into the trained network (weights
+untouched) returns exactly to the baseline, and estimating that shift from
+the sinogram alone — the Helgason–Ludwig first moment, no ground truth — lands
+0.01 dB from the oracle. The one axis that swapping does not recover is
+per-angle jitter, which is the one that actually destroys measurement
+information; `identifiability.py` predicts that split before any network is
+trained. The hoped-for next step — using the consistency residuals as a
+per-scan error bar for the network — does **not** pass: they correlate with
+the damage (r = 0.84) but under-estimate it on the gauge axes by up to 7 dB,
+and under-estimation is the unsafe direction.
+
+This table was produced once before, on a mis-configured LPD (five
+source-only defaults wrong, see `learned/lpd.py`) and on 4 images; that
+version was retracted and re-run with the official recipe at n = 128. The
+conclusions survived; the retracted model's own baseline, re-measured at
+n = 128, was 4 dB lower than its 4-image number had suggested. Both runs are
+in the results file.
 
 ## Three results worth knowing even if you never run this
 
@@ -134,13 +169,21 @@ that look entirely reasonable.
 
 ## Scope, honestly
 
-This is the **classical, untrained** end of the problem. The ceiling in this
-space sits near 33.7 dB on the test split used here; learned reconstructors
-on this benchmark report 35.4–36.3 on the challenge split, and that is where
-the frontier is. What is demonstrated here is a reproduction done to the
-bottom, a search loop that found a gain that survives a paired test at
-n = 128, and a harness that caught the moment its own headline numbers were
+The reconstruction results are at the **classical, untrained** end of the
+problem, where the ceiling sits near 33.7 dB on the test split used here;
+learned reconstructors on this benchmark report 35.4–36.3 on the challenge
+split, and the LPD trained in `learned/` reaches 35.1 on 128 test images.
+The learned side is used as a test bed for operator mismatch, not as a
+contender on the leaderboard. What is demonstrated here is a reproduction
+done to the bottom, a search loop that found a gain that survives a paired
+test at n = 128, a mismatch study whose one negative gate is reported as
+such, and a harness that caught the moment its own headline numbers were
 too good.
+
+Training the learned models needs the LoDoPaB validation split
+(`LODOPAB_VAL_DIR`), dival 0.6.2 and a GPU for a few hours; the trained
+checkpoints are not in the repository. Everything else runs from the test
+files alone.
 
 The methodology the loop follows is written up separately in
 [breakthrough-harness](https://github.com/GuoCheng24/breakthrough-harness).
