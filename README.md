@@ -75,7 +75,7 @@ thing here.
 | [`solvers/`](solvers/) | Proximal operators and splitting schemes |
 | [`harness/`](harness/) | The scoring harness: one evaluation entry point, tiered (seconds / minutes / full budget), null models, both metric conventions, the published-number table |
 | [`harness/mismatch.py`](harness/mismatch.py) | A one-parameter family of operator mismatches — gantry angle offset, detector scale, per-angle jitter, centre-of-rotation shift — each reported in pixels or angular steps, with four guards that must fail on deliberately broken operators |
-| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to 0.003 pixel with no ground truth, and only the jitter is a genuine residual |
+| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to within 0.006 pixel with no ground truth, and only the jitter is a genuine residual |
 | [`guards/`](guards/) | The adjoint test — on **random** inputs, because structured ones pass a wrong adjoint with error exactly 0.0 |
 | [`honesty/`](honesty/) | Null-space decomposition: how much of a reconstruction is determined by the data and how much is prior |
 | [`crime/`](crime/) | Inverse-crime control — does the result depend on who generated the observations? |
@@ -104,7 +104,7 @@ Geometric mismatch is **fully removable**: a 4-pixel centre-of-rotation error
 costs 13.9 dB, swapping the correct operator into the trained network (weights
 untouched) returns exactly to the baseline, and estimating that shift from
 the sinogram alone — the Helgason–Ludwig first moment, no ground truth — lands
-0.01 dB from the oracle. The one axis that swapping does not recover is
+0.007 dB from the oracle. The one axis that swapping does not recover is
 per-angle jitter, which is the one that actually destroys measurement
 information; `identifiability.py` predicts that split before any network is
 trained. The hoped-for next step — using the consistency residuals as a

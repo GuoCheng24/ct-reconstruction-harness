@@ -140,8 +140,11 @@ axes as `harness/mismatch.py` at deployment. 128 test images, file 0
 Three things the table says. Geometric mismatch is fully removable by giving
 the trained network the right operator, weights untouched; for the
 centre-of-rotation axis the right operator is recoverable from the sinogram
-alone (Helgason–Ludwig first moment, estimate error 0.001–0.003 px), so the
-self-calibrated column is within 0.01 dB of the oracle with no ground truth.
+alone (Helgason–Ludwig first moment; the estimate lands within 0.006 px of the
+injected shift across 0.25–4 px), so the self-calibrated column is within
+0.007 dB of the oracle with no ground truth. The 0.003 px quoted in an earlier
+version of this paragraph was the classical-side figure from the TV experiment,
+not this table's.
 Per-angle jitter is not removable — it is the one axis that changes the
 information content of the measurement, exactly as `identifiability.py`
 classifies it. And the gauge axes are *not* free for the network the way they

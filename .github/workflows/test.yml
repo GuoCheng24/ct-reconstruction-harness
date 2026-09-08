@@ -22,6 +22,13 @@ jobs:
       - name: guards fail on deliberately broken operators
         run: python tests/test_mismatch_guards.py
 
+      # Bounds quoted in the README must hold against the committed results.
+      # Two did not when this was added: a 0.003 px figure copied from the
+      # classical experiment into the learned-side paragraph (measured 0.0059),
+      # and a 0.006 dB bound against a measured 0.0064.
+      - name: every bound quoted in the README holds
+        run: python guards/readme_bounds.py
+
       # This workflow names the patterns it hunts, so it excludes itself -
       # the same self-match that made the first version of this check fail.
       - name: no local paths or private identifiers anywhere in the tree
