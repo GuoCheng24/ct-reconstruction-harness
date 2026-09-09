@@ -36,9 +36,10 @@ the images are easy.
 
 The first published version of this table read FBP 31.05, TV 33.83, TGV 34.51
 "passing the published DIP+TV 34.41". Every one of those numbers was a mean
-over the first 16 of 3553 test images, and those 16 are **0.8 dB easier**
-than the rest (measured on all three methods). The FBP row was worse than
-that: its filter setting was the TV *initialization* (frequency scaling 0.1),
+over the first 16 of 3553 test images, and those 16 are **easier than the
+rest**: by 0.95 dB for TV and 0.92 dB for TGV against the other 112 images
+that were evaluated, and by 0.33 dB for FBP against the remaining 3537. The
+FBP row was worse than that: its filter setting was the TV *initialization* (frequency scaling 0.1),
 not the official FBP setting (0.641, from the benchmark authors' own
 `lodopab_fbp_hyper_params.json`), and 31.05 does not occur in any logged run
 at all — the nearest thing is four images under the non-official metric.
@@ -145,9 +146,15 @@ detector-scale error and per-angle jitter, same 128 images
 
 The estimate of the shift survives all of it: across the ten combinations its
 error stays between 0.0012 and 0.0143 pixel, and it is the same size at a
-1-pixel and at a 4-pixel shift, so it is a fixed offset of the estimator on
-these images rather than an error that grows with the quantity being
-estimated. What self-calibration cannot do is repair the axes it does not
+1-pixel and at a 4-pixel shift. Most of that is not calibration error at all:
+run the estimator on the *unperturbed* sinograms, where the true offset is
+zero, and it already reports −0.0012 px. Subtract that floor and what is
+genuinely left over is under 4 × 10⁻⁵ px out to a one-pixel shift, reaching
+1.0 × 10⁻³ px only at four. The floor belongs to the images — the other test
+file gives −0.0049 px, 4.04 times larger — while the part that responds to
+the shift agrees between the two files to 6 per cent, so it belongs to the
+method ([`harness/run_estimator_floor.py`](harness/run_estimator_floor.py)).
+What self-calibration cannot do is repair the axes it does not
 estimate. With a 4-step gantry offset also present it still recovers the
 centre-of-rotation and still leaves the rotation, which costs 7 dB against
 the oracle — a coordinate gauge that the network cannot absorb because it is

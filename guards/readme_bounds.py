@@ -79,7 +79,56 @@ def num(cell):
     return float(m.group()) if m else None
 
 
+def classical(readme):
+    """The headline table and the three results, against results/evaluation_n128.json."""
+    ev = load("evaluation_n128.json")
+    fbp_off = ev["fbp"]["official_odl_astra_operator"]
+    fbp_ops = ev["fbp"]["ops_operator_calib_on_4_images"]
+    tv, iso, tgv = (ev["tv_aniso_official_recipe"], ev["tv_iso"], ev["tgv2_ratio0.3_gamma28"])
+    pub, pair = ev["published_challenge_set"], ev["paired"]
+    wls = ev["poisson_vs_wls_tgv2_r0.5_g20_n32"]["paired_poisson_minus_wls"]
+
+    print("README, the headline table")
+    for run, label in ((fbp_off, "FBP, official operator"), (fbp_ops, "FBP, the operator in ops/"),
+                       (tv, "TV"), (tgv, "TGV")):
+        literal = f"{run['psnr_mean']:.2f} ± {run['psnr_se']:.2f}   {run['n']}"
+        check(label, " ".join(literal.split()) in flat(readme),
+              f"README does not contain {literal!r}")
+    p = pair["tgv_minus_tv_aniso"]
+    check("the paired gain",
+          f"+{p['mean']:.2f} ± {p['se']:.2f}   t = {p['t']:.1f}   wins {p['wins']}/{p['n']}"
+          .replace("   ", " ") in flat(readme))
+    for value, label in ((pub["FBP"], "published FBP"), (pub["TV"], "published TV"),
+                         (pub["DIP+TV"], "published DIP+TV")):
+        check(label, f"{value:.2f}" in flat(readme), f"README does not contain {value:.2f}")
+
+    print("README, the three results")
+    check("the TGV gain, restated",
+          f"+{p['mean']:.2f} ± {p['se']:.2f} dB over the matched" in flat(readme))
+    check("winning on 125 of them", f"winning on {p['wins']} of them" in flat(readme))
+    i = pair["tv_iso_minus_tv_aniso"]
+    check("isotropic TV over anisotropic",
+          f"is +{i['mean']:.2f} ± {i['se']:.2f} dB, paired, on {i['wins']} of {i['n']} images"
+          in flat(readme))
+    check("Poisson against weighted least squares",
+          f"is {wls['mean']:.2f} ± {wls['se']:.2f} dB from Poisson, paired on {wls['n']} images, "
+          f"p = {wls['p']:.2f}".replace("-0", "−0") in flat(readme))
+
+    print("README, how much easier the first sixteen images are")
+    for run, key, label in ((tv, "psnr_mean", "TV"), (tgv, "psnr_mean", "TGV")):
+        first = run["first16_mean"]
+        rest = (run["n"] * run[key] - 16 * first) / (run["n"] - 16)
+        check(f"{label}, first sixteen against the other {run['n'] - 16}",
+              f"{first - rest:.2f} dB for {label}" in flat(readme),
+              f"README does not contain '{first - rest:.2f} dB for {label}'")
+    rest = (fbp_off["n"] * fbp_off["psnr_mean"] - 16 * fbp_off["first16"]) / (fbp_off["n"] - 16)
+    check(f"FBP, first sixteen against the other {fbp_off['n'] - 16}",
+          f"by {fbp_off['first16'] - rest:.2f} dB for FBP against the remaining {fbp_off['n'] - 16}"
+          in flat(readme))
+
+
 def main(readme, results_md, debugging):
+    classical(readme)
     mm = load("lpd_mismatch_n128.json")
     primary = mm["official_recipe_n128"]
     rows = primary["rows"]
@@ -178,6 +227,36 @@ def main(readme, results_md, debugging):
             check(f"composed {cells[0]} {key}", abs(num(cells[col]) - want[key]) < 0.005,
                   f"documented {cells[col]} vs {want[key]:.4f}")
 
+    print("the floor of the shift estimate")
+    floor = load("estimator_floor.json")["files"]
+    f0, f1 = floor["000"]["d_hat_px_mean"], floor["001"]["d_hat_px_mean"]
+    check("README quotes the floor of file 000",
+          f"reports {f0:.4f} px".replace("-", "\u2212") in flat(readme))
+    check("README quotes the floor of file 001",
+          f"gives {f1:.4f} px".replace("-", "\u2212") in flat(readme))
+    check("README quotes the ratio between them", f"{f1 / f0:.2f} times larger" in flat(readme))
+    check("RESULTS.md quotes both floors",
+          f"reports {f0:.5f} px on file 000 and {f1:.5f} px on file 001"
+          .replace("-", "\u2212") in flat(results_md))
+    check("RESULTS.md quotes the ratio", f"factor of {f1 / f0:.2f}" in flat(results_md))
+    # the decomposition table: the leftover at each shift, minus that file's own floor
+    left = {}
+    for key, tag, fl in (("official_recipe_n128", "000", f0),
+                         ("official_recipe_n128_file001", "001", f1)):
+        left[tag] = {r["delta"]: (r["d_hat_px"] - r["delta"]) - fl
+                     for r in mm[key]["rows"] if r["axis"] == "cor"}
+        for delta, v in left[tag].items():
+            check(f"file {tag}, shift {delta} px, after removing the floor",
+                  f"{v:.6f}".replace("-", "\u2212") in flat(results_md),
+                  f"RESULTS.md does not contain {v:.6f}".replace("-", "\u2212"))
+    small = max(abs(v) for t in left for d, v in left[t].items() if d <= 1.0)
+    check("the claim that it is small out to a one-pixel shift", small < 4e-5,
+          f"largest is {small:.2e} px")
+    big = max(abs(left['000'][d] - left['001'][d]) / abs(left['000'][d]) for d in (2.0, 4.0))
+    check("the claim that the two files agree to 6 per cent where it is measurable",
+          f"{big:.0%}" == "6%", f"they agree to {big:.1%}")
+    check("README says so", "agrees between the two files to 6 per cent" in flat(readme))
+
     print("DEBUGGING.md, the seed sweep")
     a = seeds["across_seeds"]
     check("the across-seed p-value", f"p = {a['p']:.2f}" in debugging,
@@ -222,7 +301,19 @@ if __name__ == "__main__":
                           ("a scalar bound", (readme.replace("costs 14.3 dB", "costs 13.9 dB"),
                                               results_md, debugging)),
                           ("the seed sweep", (readme, results_md,
-                                              debugging.replace("p = 0.49", "p = 0.0049")))):
+                                              debugging.replace("p = 0.49", "p = 0.0049"))),
+                          ("the headline table", (readme.replace("33.00 ± 0.33", "33.36 ± 0.33"),
+                                                  results_md, debugging)),
+                          ("the paired gain", (readme.replace("wins 125/128", "wins 128/128"),
+                                               results_md, debugging)),
+                          ("how easy the first sixteen are",
+                           (readme.replace("0.95 dB for TV", "0.80 dB for TV"),
+                            results_md, debugging)),
+                          ("the floor of the shift estimate",
+                           (readme.replace("reports −0.0012 px", "reports −0.0010 px"),
+                            results_md, debugging)),
+                          ("a cell of the decomposition table",
+                           (readme, results_md.replace("−0.000984", "−0.000934"), debugging))):
             FAILURES.clear()
             print(f"\n--- self-test: corrupting {what} ---")
             with contextlib.redirect_stdout(io.StringIO()):

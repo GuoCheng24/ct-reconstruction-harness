@@ -185,9 +185,37 @@ miscalibrated scanner fails. Combining them, same 128 images
 The closed-form estimate of the shift is the part that survives: its error
 stays inside 0.0022 pixel whenever jitter is absent and inside 0.0143 pixel
 when jitter is present, and it is the same size at a 1-pixel and at a
-4-pixel shift, so what is left is a fixed offset of the estimator on these
-images and not an error that scales with the quantity being estimated.
-Self-calibration then removes exactly the axis it estimates and no other:
+4-pixel shift.
+
+The residual of that estimate splits into two parts that behave differently,
+and the split is visible because there are two test files. Running the
+estimator on the *unperturbed* observations, where the true offset is zero,
+reports −0.00120 px on file 000 and −0.00486 px on file 001 — a floor that
+exists before any mismatch is introduced. Subtracting each file's own floor
+from the leftovers at each shift:
+
+| shift | 0.25 px | 0.5 px | 1 px | 2 px | 4 px |
+|---|---|---|---|---|---|
+| file 000 | −0.000009 | −0.000018 | −0.000036 | −0.000173 | −0.000984 |
+| file 001 | −0.000005 | −0.000009 | −0.000018 | −0.000178 | −0.001046 |
+
+The two floors differ by a factor of 4.04. What is left after removing them
+is below 4 × 10⁻⁵ px out to a one-pixel shift on both files — negligible
+beside the floors themselves, and the factor of two between the files there
+is a comparison of two numbers that are both nothing. Where it is large
+enough to compare, at two and four pixels, the two image sets agree to 6 per
+cent. So the error divides cleanly: the part that does not respond to the
+shift is a property of the images, four times larger on one file than the
+other, and the part that does respond is a property of the method, the same
+on both and growing faster than linearly.
+
+`harness/run_estimator_floor.py` measures the floor. It is not explained
+here, only measured: the model M1(θ) = a cos θ + b sin θ + d·M0(θ) carries
+the object's centre of mass in its own two terms a and b, so in the continuum
+the floor should be zero, and that it is not is a property of the
+discretization.
+
+Self-calibration removes exactly the axis it estimates and no other:
 against a simultaneous 4-step gantry offset it still lands the
 centre-of-rotation and still gives up 7 dB to the oracle, because the leftover
 rotation is a gauge that an unrolled CNN cannot absorb.
