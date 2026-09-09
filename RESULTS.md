@@ -183,7 +183,7 @@ miscalibrated scanner fails. Combining them, same 128 images
 | all four | 28.02 | 33.98 | 33.01 | 33.74 | +0.0016 px |
 
 The closed-form estimate of the shift is the part that survives: its error
-stays inside 0.0022 pixel whenever jitter is absent and inside 0.0143 pixel
+stays inside 0.0022 pixel whenever jitter is absent and inside 0.0144 pixel
 when jitter is present, and it is the same size at a 1-pixel and at a
 4-pixel shift.
 

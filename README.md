@@ -76,7 +76,7 @@ thing here.
 | [`solvers/`](solvers/) | Proximal operators and splitting schemes |
 | [`harness/`](harness/) | The scoring harness: one evaluation entry point, tiered (seconds / minutes / full budget), null models, both metric conventions, the published-number table |
 | [`harness/mismatch.py`](harness/mismatch.py) | A one-parameter family of operator mismatches — gantry angle offset, detector scale, per-angle jitter, centre-of-rotation shift — each reported in pixels or angular steps, with four guards that must fail on deliberately broken operators |
-| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to within 0.0022 pixel with no ground truth, and to within 0.0143 pixel with three other axes wrong at the same time, and only the jitter is a genuine residual |
+| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to within 0.0022 pixel with no ground truth, and to within 0.0144 pixel with three other axes wrong at the same time, and only the jitter is a genuine residual |
 | [`guards/`](guards/) | The adjoint test — on **random** inputs, because structured ones pass a wrong adjoint with error exactly 0.0 |
 | [`honesty/`](honesty/) | Null-space decomposition: how much of a reconstruction is determined by the data and how much is prior |
 | [`crime/`](crime/) | Inverse-crime control — does the result depend on who generated the observations? |
@@ -145,7 +145,7 @@ detector-scale error and per-angle jitter, same 128 images
 ```
 
 The estimate of the shift survives all of it: across the ten combinations its
-error stays between 0.0012 and 0.0143 pixel, and it is the same size at a
+error stays between 0.0012 and 0.0144 pixel, and it is the same size at a
 1-pixel and at a 4-pixel shift. Most of that is not calibration error at all:
 run the estimator on the *unperturbed* sinograms, where the true offset is
 zero, and it already reports −0.0012 px. Subtract that floor and what is

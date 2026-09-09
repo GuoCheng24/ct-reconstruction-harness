@@ -176,17 +176,49 @@ def main(readme, results_md, debugging):
     pearson = sum((p - mp) * (m - mm_) for p, m in zip(pred, meas)) / (sp * sm)
     facts = [
         (f"costs {base - row(rows, 'cor', 4.0)['naive']:.1f} dB", "cost of a 4-pixel shift"),
-        (f"lands {max(abs(r['selfcal'] - r['swap']) for r in cor_rows):.3f} dB from the oracle",
-         "self-calibration against the oracle"),
-        (f"to {max(abs(r['d_hat_px'] - r['delta']) for r in cor_rows):.3f} pixel",
-         "accuracy of the closed-form shift estimate"),
-        (f"to {max(abs(r['d_hat_px'] - r['cor_px']) for r in comp['rows'] if 'd_hat_px' in r):.3f} pixel",
-         "the same estimate with other axes wrong"),
         (f"(r = {pearson:.2f})", "correlation of the consistency residuals"),
-        (f"{max(m - p for p, m in zip(pred, meas)):.1f} dB", "worst under-estimation on a gauge axis"),
     ]
     for literal, what in facts:
         check(what, literal in flat(readme), f"README does not contain {literal!r}")
+
+    # A bound is not a value, and the difference is where this repository has been
+    # wrong twice. "Within 0.003 pixel" was the classical experiment's figure
+    # carried into the learned-side paragraph, which measures 0.0059; "within
+    # 0.006 dB" was written against a measured 0.0064. Both read as careful. A
+    # bound must therefore be the measured maximum rounded *up*, never to nearest:
+    # 0.00182 dB printed to four places is 0.0018, which is a claim the data does
+    # not support. Each bound below is checked twice -- the text must be that
+    # rounded-up maximum, and the number parsed back out of the text must not sit
+    # below the measurement.
+    print("README, the bounds it quotes")
+    bounds = [
+        (r"within ([\d.]+) pixel with no ground truth",
+         max(abs(r["d_hat_px"] - r["delta"]) for r in cor_rows), 4,
+         "the closed-form shift estimate"),
+        (r"within ([\d.]+) pixel with three other axes",
+         max(abs(r["d_hat_px"] - r["cor_px"]) for r in comp["rows"] if "d_hat_px" in r), 4,
+         "the same estimate with three other axes wrong"),
+        (r"within ([\d.]+) dB of the oracle",
+         max(abs(r["selfcal"] - r["swap"]) for r in cor_rows), 4,
+         "self-calibration against the oracle"),
+        (r"within ([\d.]+) dB of the baseline",
+         max(abs(base - r["swap"]) for r in cor_rows if r["delta"] >= 1), 3,
+         "swapping the true operator back in"),
+        (r"by up to ([\d.]+) dB, and under-estimation",
+         max(m - p for p, m in zip(pred, meas)), 1,
+         "worst under-estimation on a gauge axis"),
+    ]
+    for pattern, value, places, what in bounds:
+        hit = re.search(pattern, flat(readme))
+        if hit is None:
+            check(what, False, f"README carries no bound matching {pattern!r}")
+            continue
+        want = math.ceil(value * 10 ** places) / 10 ** places
+        check(f"{what}, quoted as the measured maximum",
+              hit.group(1) == f"{want:.{places}f}",
+              f"README says {hit.group(1)}, rounded up the measurement is {want:.{places}f}")
+        check(f"{what}, not quoted tighter than the data", float(hit.group(1)) >= value,
+              f"README claims {hit.group(1)} against a measured {value:.6f}")
 
     print("RESULTS.md, the bounds on the shift estimate")
     no_jit = [abs(r["d_hat_px"] - r["cor_px"]) for r in comp["rows"]
@@ -195,8 +227,9 @@ def main(readme, results_md, debugging):
                 if "d_hat_px" in r and r["jit_steps"] > 0]
     for value, what in ((max(no_jit), "the estimate with no jitter present"),
                         (max(with_jit), "the estimate with jitter present")):
-        check(what, f"inside {value:.4f} pixel" in flat(results_md),
-              f"RESULTS.md does not contain 'inside {value:.4f} pixel'")
+        up = math.ceil(value * 1e4) / 1e4          # a bound rounds up, never to nearest
+        check(what, f"inside {up:.4f} pixel" in flat(results_md),
+              f"RESULTS.md does not contain 'inside {up:.4f} pixel' (measured {value:.6f})")
 
     print("RESULTS.md, the two tables")
     for cells in md_table(results_md, "## Learned side: operator mismatch on a trained LPD"):
@@ -307,8 +340,16 @@ if __name__ == "__main__":
                           ("a file label", (readme.replace("test file 000", "test file 001"),
                                             results_md.replace("test file 000", "test file 001"),
                                             debugging)),
-                          ("a scalar bound", (readme.replace("costs 14.3 dB", "costs 13.9 dB"),
+                          ("a quoted value", (readme.replace("costs 14.3 dB", "costs 13.9 dB"),
                                               results_md, debugging)),
+                          # the failure this file exists for: a bound rounded the wrong
+                          # way. 0.0019 -> 0.0018 is the nearest-rounding of the same
+                          # measurement and reads as a correction; it is a claim the data
+                          # does not support.
+                          ("a bound rounded down instead of up",
+                           (readme.replace("within 0.0019 dB of the oracle",
+                                           "within 0.0018 dB of the oracle"),
+                            results_md, debugging)),
                           ("the seed sweep", (readme, results_md,
                                               debugging.replace("p = 0.15", "p = 0.0015"))),
                           ("how many jitter draws there were",
