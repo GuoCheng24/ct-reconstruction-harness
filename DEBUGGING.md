@@ -88,7 +88,7 @@ is worse than none because it feels like some.
 
 ---
 
-# Three lessons that were not about this baseline
+# Four lessons that were not about this baseline
 
 ## The adjoint is the transpose of your implementation, not the inverse of your geometry
 
@@ -130,9 +130,49 @@ against a regularizer that sums over pixels.
 
 ---
 
+## A p-value of 3 × 10⁻²⁶ that one change of random seed reverses
+
+The mismatch family has one axis that is not a coordinate gauge: per-angle
+jitter genuinely destroys measurement information. On that axis the
+self-calibrated operator — which carries an estimated centre-of-rotation and
+no jitter at all — scored *above* the oracle operator carrying the true
+jitter: +0.16 dB, paired over 128 images, t = 11.9, p = 2 × 10⁻²², winning on
+121 of them. Read as an unrolled network preferring the operator it was
+trained on over the one that actually produced the data, that would have been
+worth a paragraph of its own.
+
+It is not true. The same measurement with three further jitter realizations:
+
+```
+  seed    swap   selfcal   selfcal − swap   paired t          p    wins
+    0    32.43     32.59        +0.159        +11.92   2 × 10⁻²²  121/128
+    1    32.32     32.50        +0.184        +13.48   3 × 10⁻²⁶  120/128
+    2    32.37     32.56        +0.191        +11.58   1 × 10⁻²¹  118/128
+    3    32.55     32.33        −0.220         −7.94   9 × 10⁻¹³   30/128
+```
+
+Every row is overwhelming and one of them points the other way. The claim is
+about the *distribution* of jitter, so the unit of replication is the jitter
+realization, not the image — all 128 images share a single draw. Across the
+four draws: +0.08 ± 0.10 dB, t = 0.79, **p = 0.49**.
+
+Nothing about the paired test was wrong. It is a correct, very powerful test
+of "given this particular jitter, does self-calibration win", and that is not
+a question anyone has. The two p-values differ by twenty-six orders of
+magnitude and only the weak one is answering the question that was asked.
+
+The general form: when a perturbation is drawn once and applied to every
+item, the items are not replicates of the claim. The cheapest defence is to
+re-draw the perturbation before writing the sentence down, which costs one
+more run and is the only thing that separates this paragraph from a result.
+Per-image numbers for all four draws are in
+[`results/lpd_jitter_seed_sweep.json`](results/lpd_jitter_seed_sweep.json).
+
+---
+
 # What this cost, and what it bought
 
-Seven layers, three separate lessons, and eight hypotheses on the last layer.
+Seven layers, four separate lessons, and eight hypotheses on the last layer.
 The result is a reproduction that matches the published number without any
 tuning, which is the only state from which an improvement claim means
 anything.

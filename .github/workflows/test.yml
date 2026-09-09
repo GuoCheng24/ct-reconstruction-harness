@@ -22,12 +22,18 @@ jobs:
       - name: guards fail on deliberately broken operators
         run: python tests/test_mismatch_guards.py
 
-      # Bounds quoted in the README must hold against the committed results.
-      # Two did not when this was added: a 0.003 px figure copied from the
-      # classical experiment into the learned-side paragraph (measured 0.0059),
-      # and a 0.006 dB bound against a measured 0.0064.
-      - name: every bound quoted in the README holds
-        run: python guards/readme_bounds.py
+      # The documentation quotes ~95 numbers that live in results/*.json, and this
+      # re-derives every one of them. Two kinds of failure, because they are
+      # different: a number that disagrees with the data, and a *bound* quoted
+      # tighter than the data it bounds -- 0.003 px copied from the classical
+      # experiment into the learned-side paragraph (measured 0.0059), and 0.006 dB
+      # against a measured 0.0064, both of which read as fine until re-derived.
+      # It first proves it can fail, corrupting a table cell, a file label, a
+      # bound and a p-value in memory and requiring each to raise a failure of its
+      # own, so a check that has quietly stopped checking cannot pass by riding on
+      # an unrelated one.
+      - name: the documentation still matches the data
+        run: python guards/readme_bounds.py --self-test
 
       # This workflow names the patterns it hunts, so it excludes itself -
       # the same self-match that made the first version of this check fail.

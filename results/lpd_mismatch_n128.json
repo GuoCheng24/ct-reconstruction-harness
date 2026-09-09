@@ -1,7 +1,365 @@
 {
- "_note": "LoDoPaB-CT test file 000, first 128 images, official adaptive PSNR. Same perturbations and ruler as harness/mismatch_eval.py. Three runs of the same table: the official-recipe LPD at n=128 (the result), the mis-configured LPD at n=128 (the model an earlier version of this study used, re-run for comparison), and that earlier n=4 table as it was produced.",
- "_measured": "2026-09-07",
+ "_note": "Deployment-side operator mismatch for the trained LPD. Same perturbation family, same images and same metric convention as harness/mismatch_eval.py, so the classical and the learned curve can be read against each other.\nFour runs of the same table. `official_recipe_n128` is the one the README and RESULTS.md quote: LoDoPaB-CT test file 000, the evaluation file, which is the file this repository's own convention reserves for reporting (see harness/tv_adam.py). `official_recipe_n128_file001` is the same table on test file 001, the calibration file; it was quoted by an earlier version of the documentation, which labelled it 'file 0' -- the prose was wrong, the `file` field was always right. Every conclusion is the same on both files; the numbers differ by 0.1-0.5 dB because file 001 is the easier of the two. The two `misconfigured_*` runs are the retracted mis-configured LPD, kept so that the retraction can be checked; both are on file 001, so that the n=128 and n=4 versions of that model are compared with each other on the same images.",
+ "_measured": {
+  "official_recipe_n128": "2026-09-09",
+  "official_recipe_n128_file001": "2026-09-07",
+  "misconfigured_recipe_n128": "2026-09-07",
+  "misconfigured_recipe_n4_as_originally_produced": "2026-08-29"
+ },
  "official_recipe_n128": {
+  "recipe": {
+   "n_layer": 3,
+   "batch_norm": false,
+   "prelu": true
+  },
+  "params": 874980,
+  "ckpt_step": 35220,
+  "n": 128,
+  "file": 0,
+  "rows": [
+   {
+    "axis": "none",
+    "delta": 0.0,
+    "naive": 34.9777220862003,
+    "swap": 34.9777220862003,
+    "selfcal": 34.9777220862003,
+    "ssim": 0.821554957801371,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   {
+    "axis": "cor",
+    "delta": 0.25,
+    "hl_ratio": [
+     1.0,
+     1.2482,
+     1.0003,
+     1.2186,
+     0.9999,
+     1.1005,
+     0.9949
+    ],
+    "naive": 33.79786604260916,
+    "swap": 34.405042807587094,
+    "ssim": 0.8119273122663964,
+    "selfcal": 34.4068613645171,
+    "d_hat_px": 0.2487870659693341
+   },
+   {
+    "axis": "cor",
+    "delta": 0.5,
+    "hl_ratio": [
+     1.0,
+     1.7984,
+     1.0057,
+     1.699,
+     1.0047,
+     1.3561,
+     0.9928
+    ],
+    "naive": 31.730365231255526,
+    "swap": 34.06684175313191,
+    "ssim": 0.8074665403207184,
+    "selfcal": 34.06734836567057,
+    "d_hat_px": 0.4987780424791625
+   },
+   {
+    "axis": "cor",
+    "delta": 1.0,
+    "hl_ratio": [
+     1.0,
+     3.1586,
+     1.0303,
+     2.8006,
+     1.0278,
+     1.993,
+     0.9978
+    ],
+    "naive": 28.020188290272152,
+    "swap": 34.975335117895426,
+    "ssim": 0.8215533466744359,
+    "selfcal": 34.97531422291135,
+    "d_hat_px": 0.9987601375540647
+   },
+   {
+    "axis": "cor",
+    "delta": 2.0,
+    "hl_ratio": [
+     0.9999,
+     5.9831,
+     1.1183,
+     4.9488,
+     1.1069,
+     3.3042,
+     1.021
+    ],
+    "naive": 23.943426009438433,
+    "swap": 34.97332224089076,
+    "ssim": 0.8215502771488924,
+    "selfcal": 34.973304212710694,
+    "d_hat_px": 1.9986234673248908
+   },
+   {
+    "axis": "cor",
+    "delta": 4.0,
+    "hl_ratio": [
+     0.9998,
+     9.6576,
+     1.385,
+     7.6903,
+     1.3508,
+     5.3274,
+     1.13
+    ],
+    "naive": 20.653874296274147,
+    "swap": 34.96873405003463,
+    "ssim": 0.8215326450415472,
+    "selfcal": 34.968689764085326,
+    "d_hat_px": 3.9978123302669895
+   },
+   {
+    "axis": "rot",
+    "delta": 0.25,
+    "hl_ratio": [
+     0.8182,
+     0.7947,
+     0.8062,
+     0.7926,
+     0.792,
+     0.79,
+     0.789
+    ],
+    "naive": 34.89783754864911,
+    "gauge_fixed": 34.96549750549119,
+    "swap": 34.9803283819183,
+    "ssim": 0.8213433022970111
+   },
+   {
+    "axis": "rot",
+    "delta": 0.5,
+    "hl_ratio": [
+     0.7476,
+     0.713,
+     0.7301,
+     0.71,
+     0.7091,
+     0.706,
+     0.7047
+    ],
+    "naive": 34.65445259236511,
+    "gauge_fixed": 34.91449846536908,
+    "swap": 34.98005747428553,
+    "ssim": 0.8212586764636172
+   },
+   {
+    "axis": "rot",
+    "delta": 1.0,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 33.76222963455125,
+    "gauge_fixed": 34.679185085501686,
+    "swap": 34.977398270076435,
+    "ssim": 0.8215545437658826
+   },
+   {
+    "axis": "rot",
+    "delta": 2.0,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 31.446848359376826,
+    "gauge_fixed": 33.88912817576455,
+    "swap": 34.976103985551646,
+    "ssim": 0.821550353217525
+   },
+   {
+    "axis": "rot",
+    "delta": 4.0,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 27.914432967777064,
+    "gauge_fixed": 32.2314302442642,
+    "swap": 34.97315159642215,
+    "ssim": 0.8215344975489416
+   },
+   {
+    "axis": "ang_jitter",
+    "delta": 0.25,
+    "hl_ratio": [
+     0.8739,
+     0.857,
+     0.8719,
+     0.8547,
+     0.8668,
+     0.8532,
+     0.8692
+    ],
+    "naive": 34.87752233664365,
+    "swap": 34.5485477387911,
+    "ssim": 0.8182399955208224
+   },
+   {
+    "axis": "ang_jitter",
+    "delta": 0.5,
+    "hl_ratio": [
+     0.8413,
+     0.8202,
+     0.8523,
+     0.8183,
+     0.8557,
+     0.8158,
+     0.8697
+    ],
+    "naive": 34.61656919531901,
+    "swap": 34.28846944685891,
+    "ssim": 0.8140286015266287
+   },
+   {
+    "axis": "ang_jitter",
+    "delta": 1.0,
+    "hl_ratio": [
+     0.8398,
+     0.8306,
+     0.9056,
+     0.8356,
+     0.9534,
+     0.833,
+     1.0068
+    ],
+    "naive": 34.27690285197302,
+    "swap": 33.944040312653456,
+    "ssim": 0.807052264279347
+   },
+   {
+    "axis": "ang_jitter",
+    "delta": 2.0,
+    "hl_ratio": [
+     0.8378,
+     0.8759,
+     1.0767,
+     0.9006,
+     1.2769,
+     0.8957,
+     1.4139
+    ],
+    "naive": 33.880001627814416,
+    "swap": 33.58524037018256,
+    "ssim": 0.7993395450042217
+   },
+   {
+    "axis": "ang_jitter",
+    "delta": 4.0,
+    "hl_ratio": [
+     0.8442,
+     1.0273,
+     1.5547,
+     1.1105,
+     2.1274,
+     1.0996,
+     2.414
+    ],
+    "naive": 32.6020259692838,
+    "swap": 32.43447102263092,
+    "ssim": 0.7803337510016422
+   },
+   {
+    "axis": "det_scale",
+    "delta": 0.0002,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 34.95700371573301,
+    "gauge_fixed": 34.95754763373937,
+    "swap": 34.96990924135015,
+    "ssim": 0.8211804198295001
+   },
+   {
+    "axis": "det_scale",
+    "delta": 0.0005,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 34.85104258823168,
+    "gauge_fixed": 34.85257088844831,
+    "swap": 34.94475183131361,
+    "ssim": 0.8205569612999548
+   },
+   {
+    "axis": "det_scale",
+    "delta": 0.001,
+    "hl_ratio": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "naive": 34.49026789819067,
+    "gauge_fixed": 34.4933419174252,
+    "swap": 34.88149658080023,
+    "ssim": 0.8194592814969917
+   },
+   {
+    "axis": "det_scale",
+    "delta": 0.005,
+    "hl_ratio": [
+     1.0001,
+     1.0,
+     0.9983,
+     1.0,
+     0.9998,
+     1.0,
+     1.0
+    ],
+    "naive": 28.994055919455707,
+    "gauge_fixed": 34.168218368410024,
+    "swap": 34.7754064383686,
+    "ssim": 0.8171448849275588
+   }
+  ]
+ },
+ "official_recipe_n128_file001": {
   "recipe": {
    "n_layer": 3,
    "batch_norm": false,
@@ -358,7 +716,8 @@
     "swap": 34.94810107311562,
     "ssim": 0.8124779391463637
    }
-  ]
+  ],
+  "_superseded_by": "official_recipe_n128 (same table on test file 000)"
  },
  "misconfigured_recipe_n128": {
   "recipe": {

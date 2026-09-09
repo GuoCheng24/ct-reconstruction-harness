@@ -75,7 +75,7 @@ thing here.
 | [`solvers/`](solvers/) | Proximal operators and splitting schemes |
 | [`harness/`](harness/) | The scoring harness: one evaluation entry point, tiered (seconds / minutes / full budget), null models, both metric conventions, the published-number table |
 | [`harness/mismatch.py`](harness/mismatch.py) | A one-parameter family of operator mismatches — gantry angle offset, detector scale, per-angle jitter, centre-of-rotation shift — each reported in pixels or angular steps, with four guards that must fail on deliberately broken operators |
-| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to within 0.006 pixel with no ground truth, and only the jitter is a genuine residual |
+| [`harness/identifiability.py`](harness/identifiability.py) | Which of those mismatches lose information at all: two are coordinate gauges, the centre-of-rotation shift is recovered in closed form from the Helgason–Ludwig moment condition to within 0.0022 pixel with no ground truth, and to within 0.0143 pixel with three other axes wrong at the same time, and only the jitter is a genuine residual |
 | [`guards/`](guards/) | The adjoint test — on **random** inputs, because structured ones pass a wrong adjoint with error exactly 0.0 |
 | [`honesty/`](honesty/) | Null-space decomposition: how much of a reconstruction is determined by the data and how much is prior |
 | [`crime/`](crime/) | Inverse-crime control — does the result depend on who generated the observations? |
@@ -88,36 +88,71 @@ Full numbers, per-image spread, and the findings from round 2 are in
 ## What happens to a learned reconstructor when the operator is wrong
 
 The same four mismatch axes, applied at deployment to an LPD trained on the
-official operator, 128 test images
+official operator, on the first 128 images of test file 000 — the same file
+and the same images as the classical table above
 ([`results/lpd_mismatch_n128.json`](results/lpd_mismatch_n128.json)):
 
 ```
                           naive     swap in the        closed-form
   axis         delta   (wrong op)  true operator   self-calibration
-  cor          4 px     21.16        35.09            35.09      ← baseline 35.10
-  rot          4 steps  28.29        35.09              —
-  det_scale    0.5 %    29.40        34.95              —
-  ang_jitter   4 steps  32.79        32.64              —        ← not recovered
+  cor          4 px     20.65        34.97            34.97      ← baseline 34.98
+  rot          4 steps  27.91        34.97              —
+  det_scale    0.5 %    28.99        34.78              —
+  ang_jitter   4 steps  32.60        32.43              —        ← not recovered
 ```
 
 Geometric mismatch is **fully removable**: a 4-pixel centre-of-rotation error
-costs 13.9 dB, swapping the correct operator into the trained network (weights
-untouched) returns exactly to the baseline, and estimating that shift from
-the sinogram alone — the Helgason–Ludwig first moment, no ground truth — lands
-0.007 dB from the oracle. The one axis that swapping does not recover is
-per-angle jitter, which is the one that actually destroys measurement
-information; `identifiability.py` predicts that split before any network is
-trained. The hoped-for next step — using the consistency residuals as a
-per-scan error bar for the network — does **not** pass: they correlate with
-the damage (r = 0.84) but under-estimate it on the gauge axes by up to 7 dB,
-and under-estimation is the unsafe direction.
+costs 14.3 dB, swapping the correct operator into the trained network (weights
+untouched) returns to within 0.009 dB of the baseline, and estimating that
+shift from the sinogram alone — the Helgason–Ludwig first moment, no ground
+truth — lands within 0.0019 dB of the oracle. The one axis that swapping does
+not recover is per-angle jitter, which is the one that actually destroys
+measurement information; `identifiability.py` predicts that split before any
+network is trained. The hoped-for next step — using the consistency residuals
+as a per-scan error bar for the network — does **not** pass: they correlate
+with the damage (r = 0.85) but under-estimate it on the gauge axes by up to
+7.1 dB, and under-estimation is the unsafe direction.
 
-This table was produced once before, on a mis-configured LPD (five
+This table was produced twice before. Once on a mis-configured LPD (five
 source-only defaults wrong, see `learned/lpd.py`) and on 4 images; that
-version was retracted and re-run with the official recipe at n = 128. The
-conclusions survived; the retracted model's own baseline, re-measured at
-n = 128, was 4 dB lower than its 4-image number had suggested. Both runs are
-in the results file.
+version was retracted and re-run with the official recipe at n = 128, and the
+conclusions survived — the retracted model's own baseline, re-measured at
+n = 128, was 4 dB lower than its 4-image number had suggested. Then once more
+on test file 001 rather than 000. File 001 is the file this repository
+reserves for calibration, and no hyper-parameter was ever chosen on it here,
+so nothing was leaked — but the documentation claimed the table was on file
+000 while the data said 001, and the classical table above really is on 000.
+It has been re-measured on 000 so that the two tables are on the same images.
+Every conclusion is unchanged; the numbers move by 0.1–0.5 dB, file 001 being
+the easier of the two. All four runs, and which file each is on, are in the
+results file.
+
+## When several axes are wrong at once
+
+One parameter at a time is not how a miscalibrated scanner fails. The
+centre-of-rotation shift combined with a gantry-angle offset, a
+detector-scale error and per-angle jitter, same 128 images
+([`results/lpd_mismatch_composed_n128.json`](results/lpd_mismatch_composed_n128.json)):
+
+```
+                            naive   oracle   self-calibrated   error in ĉ
+  cor 1 px                  28.02    34.98        34.98        −0.001 px
+  cor 1 px + rot 4 steps    26.37    34.97        27.92        −0.001 px
+  cor 1 px + scale 0.1 %    28.22    34.88        34.49        −0.001 px
+  cor 1 px + jitter 4       28.24    32.43        32.59        +0.014 px
+  all four at once          28.02    33.98        33.01        +0.002 px
+```
+
+The estimate of the shift survives all of it: across the ten combinations its
+error stays between 0.0012 and 0.0143 pixel, and it is the same size at a
+1-pixel and at a 4-pixel shift, so it is a fixed offset of the estimator on
+these images rather than an error that grows with the quantity being
+estimated. What self-calibration cannot do is repair the axes it does not
+estimate. With a 4-step gantry offset also present it still recovers the
+centre-of-rotation and still leaves the rotation, which costs 7 dB against
+the oracle — a coordinate gauge that the network cannot absorb because it is
+not equivariant; re-scoring its output after undoing the rotation recovers
+most of that (32.23 against 27.92).
 
 ## Three results worth knowing even if you never run this
 
@@ -172,7 +207,7 @@ that look entirely reasonable.
 The reconstruction results are at the **classical, untrained** end of the
 problem, where the ceiling sits near 33.7 dB on the test split used here;
 learned reconstructors on this benchmark report 35.4–36.3 on the challenge
-split, and the LPD trained in `learned/` reaches 35.1 on 128 test images.
+split, and the LPD trained in `learned/` reaches 35.0 on 128 test images.
 The learned side is used as a test bed for operator mismatch, not as a
 contender on the leaderboard. What is demonstrated here is a reproduction
 done to the bottom, a search loop that found a gain that survives a paired

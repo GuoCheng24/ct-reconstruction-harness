@@ -125,45 +125,95 @@ essential, and it is cheap to act on.
 `learned/` trains the official Learned Primal-Dual recipe (dival architecture,
 n_layer 3, no batch norm, PReLU, Xavier init, opnorm normalization) on the
 3522 validation pairs for 35,220 steps, then applies the same four mismatch
-axes as `harness/mismatch.py` at deployment. 128 test images, file 0
+axes as `harness/mismatch.py` at deployment. The first 128 images of test
+file 000 — the evaluation file, the same images as the classical tables above
 ([`results/lpd_mismatch_n128.json`](results/lpd_mismatch_n128.json)):
 
 | axis | delta | naive | swap (true operator) | self-calibrated | gauge-fixed |
 |---|---|---|---|---|---|
-| — | 0 | **35.10** | | | |
-| cor | 1 px | 28.44 | 35.09 | 35.10 | |
-| cor | 4 px | 21.16 | 35.09 | 35.09 | |
-| rot | 4 steps | 28.29 | 35.09 | | 32.50 |
-| det_scale | 0.5 % | 29.40 | 34.95 | | 34.37 |
-| ang_jitter | 4 steps | 32.79 | **32.64** | | |
+| — | 0 | **34.98** | | | |
+| cor | 1 px | 28.02 | 34.98 | 34.98 | |
+| cor | 4 px | 20.65 | 34.97 | 34.97 | |
+| rot | 4 steps | 27.91 | 34.97 | | 32.23 |
+| det_scale | 0.5 % | 28.99 | 34.78 | | 34.17 |
+| ang_jitter | 4 steps | 32.60 | **32.43** | | |
+
+An earlier version of this section carried the same table measured on test
+file 001, the calibration file, while saying it was on file 000. No
+hyper-parameter was ever selected on file 001 for the learned side, so
+nothing leaked; the label was simply wrong, and the classical tables it is
+read against are on 000. Re-measured on 000, every conclusion is unchanged
+and the numbers move by 0.1–0.5 dB. Both runs are in the results file, each
+carrying the file it was measured on.
 
 Three things the table says. Geometric mismatch is fully removable by giving
 the trained network the right operator, weights untouched; for the
 centre-of-rotation axis the right operator is recoverable from the sinogram
-alone (Helgason–Ludwig first moment; the estimate lands within 0.006 px of the
+alone (Helgason–Ludwig first moment; the estimate lands within 0.0022 px of the
 injected shift across 0.25–4 px), so the self-calibrated column is within
-0.007 dB of the oracle with no ground truth. The 0.003 px quoted in an earlier
-version of this paragraph was the classical-side figure from the TV experiment,
-not this table's.
+0.0019 dB of the oracle with no ground truth. Two earlier versions of this
+paragraph quoted bounds tighter than their own data: 0.003 px, which was the
+classical-side figure from the TV experiment rather than this table's, and
+0.006 dB against a measured 0.0064. Every bound here is now the measured
+maximum itself, and `guards/readme_bounds.py` fails if any quoted bound is
+smaller than what the results file shows — rounding a bound down is silent
+otherwise.
 Per-angle jitter is not removable — it is the one axis that changes the
 information content of the measurement, exactly as `identifiability.py`
 classifies it. And the gauge axes are *not* free for the network the way they
 are for TV: undoing the rotation on the output recovers only part of the loss
-(32.50 vs 35.09), because a CNN is not equivariant.
+(32.23 vs 34.97), because a CNN is not equivariant.
+
+### Several axes wrong at once
+
+The single-axis table moves one parameter at a time, which is not how a
+miscalibrated scanner fails. Combining them, same 128 images
+([`results/lpd_mismatch_composed_n128.json`](results/lpd_mismatch_composed_n128.json)):
+
+| combination | naive | oracle | self-calibrated | gauge-fixed | error in ĉ |
+|---|---|---|---|---|---|
+| cor 1 px | 28.02 | 34.98 | 34.98 | | −0.0012 px |
+| cor 4 px | 20.65 | 34.97 | 34.97 | | −0.0022 px |
+| cor 1 + rot 1 step | 27.91 | 34.98 | 33.76 | 34.68 | −0.0010 px |
+| cor 1 + rot 4 steps | 26.37 | 34.97 | 27.92 | 32.23 | −0.0014 px |
+| cor 1 + scale 0.1 % | 28.22 | 34.88 | 34.49 | 34.49 | −0.0012 px |
+| cor 1 + jitter 1 step | 27.92 | 33.94 | 34.28 | | +0.0029 px |
+| cor 1 + jitter 4 steps | 28.24 | 32.43 | 32.59 | | +0.0143 px |
+| cor 4 + jitter 4 steps | 20.99 | 32.42 | 32.58 | | +0.0134 px |
+| all four | 28.02 | 33.98 | 33.01 | 33.74 | +0.0016 px |
+
+The closed-form estimate of the shift is the part that survives: its error
+stays inside 0.0022 pixel whenever jitter is absent and inside 0.0143 pixel
+when jitter is present, and it is the same size at a 1-pixel and at a
+4-pixel shift, so what is left is a fixed offset of the estimator on these
+images and not an error that scales with the quantity being estimated.
+Self-calibration then removes exactly the axis it estimates and no other:
+against a simultaneous 4-step gantry offset it still lands the
+centre-of-rotation and still gives up 7 dB to the oracle, because the leftover
+rotation is a gauge that an unrolled CNN cannot absorb.
+
+On the two jitter rows the self-calibrated column reads *above* the oracle.
+That ordering is not real — it reverses when the jitter is re-drawn, and the
+paired-over-images test that makes it look certain is answering the wrong
+question. The arithmetic is in DEBUGGING.md and the numbers in
+[`results/lpd_jitter_seed_sweep.json`](results/lpd_jitter_seed_sweep.json).
 
 The gate this direction was built to test — can the consistency residuals,
 computable without ground truth, serve as an error bar for the learned
-method — **fails**: Pearson 0.84 with the measured loss, but a mean absolute
-deviation of 2.4 dB with systematic under-estimation on the gauge axes
-(rot 4 steps: predicted 0.0, measured 6.8). Under-estimation is the unsafe
+method — **fails**: Pearson 0.85 with the measured loss, but a mean absolute
+deviation of 2.6 dB with systematic under-estimation on the gauge axes
+(rot 4 steps: predicted 0.0, measured 7.1). Under-estimation is the unsafe
 direction. Reported as a negative result.
 
 Provenance: this table was first produced on 2026-08-28 with an LPD that had
 five source-only defaults wrong (n_layer 4, batch norm on at batch size 1,
 LeakyReLU, Kaiming init) on 4 images, retracted the same evening, and re-run
-here with the official recipe at n = 128. Re-measuring the mis-configured
-model at n = 128 gives a baseline of 30.76 against the 34.75 its 4-image
-table had shown; the structural conclusions are the same in all three runs.
+with the official recipe at n = 128. Re-measuring the mis-configured model at
+n = 128 gives a baseline of 30.76 against the 34.75 its 4-image table had
+shown — those two runs are both on file 001, so that the mis-configured model
+is compared with itself on the same images. The version reported above was
+then re-measured on file 000 for the reason given there. The structural
+conclusions are the same in all four runs.
 
 ## Inverse crime control
 

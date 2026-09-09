@@ -1,0 +1,178 @@
+{
+ "_note": "Several mismatch axes wrong at the same time. The single-axis table (lpd_mismatch_n128.json) moves one parameter at a time, which is not how a miscalibrated scanner fails. Here the centre-of-rotation shift is combined with a gantry-angle offset, a detector-scale error and per-angle jitter, and the closed-form self-calibration -- which estimates the centre-of-rotation only, from the Helgason-Ludwig first moment, with no ground truth -- is asked to work in their presence.\nColumns: `naive` = data perturbed, network still holds the official operator; `swap` = network given the true composed operator (the oracle); `selfcal` = network given an operator carrying only the estimated centre-of-rotation; `selfcal_gauge_fixed` = the self-calibrated output re-scored after undoing the rotation or scaling as a group action on the image. `d_hat_px` is the estimated shift, `cor_px` the true one.",
+ "_measured": "2026-09-09",
+ "ckpt_step": 35220,
+ "n": 128,
+ "file": 0,
+ "baseline": 34.977731905828904,
+ "rows": [
+  {
+   "case": "none",
+   "params": {},
+   "cor_px": 0.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 0.0,
+   "naive": 34.977732788878214,
+   "swap": 34.97773182364639,
+   "ssim": 0.8215547099766272
+  },
+  {
+   "case": "cor1",
+   "params": {
+    "cor": 0.0007167554117290541
+   },
+   "cor_px": 1.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 0.0,
+   "naive": 28.02009128930575,
+   "swap": 34.97534420312867,
+   "ssim": 0.8215531001738121,
+   "d_hat_px": 0.9987601375540647,
+   "d_hat_err_px": -0.0012398624459353247,
+   "selfcal": 34.975321392287555
+  },
+  {
+   "case": "cor4",
+   "params": {
+    "cor": 0.0028670216469162163
+   },
+   "cor_px": 4.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 0.0,
+   "naive": 20.653795436975777,
+   "swap": 34.96874629132688,
+   "ssim": 0.8215324302231641,
+   "d_hat_px": 3.9978123302669895,
+   "d_hat_err_px": -0.0021876697330105443,
+   "selfcal": 34.968701932957714
+  },
+  {
+   "case": "cor1+rot1",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "rot": 0.0031415926535897933
+   },
+   "cor_px": 1.0,
+   "rot_steps": 1.0,
+   "det_scale": 1.0,
+   "jit_steps": 0.0,
+   "naive": 27.911392769697915,
+   "swap": 34.97505655626849,
+   "ssim": 0.8215527469188497,
+   "d_hat_px": 0.9989574738751305,
+   "d_hat_err_px": -0.0010425261248695472,
+   "selfcal": 33.76025036856936,
+   "selfcal_gauge_fixed": 34.67731408407805
+  },
+  {
+   "case": "cor1+rot4",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "rot": 0.012566370614359173
+   },
+   "cor_px": 1.0,
+   "rot_steps": 4.0,
+   "det_scale": 1.0,
+   "jit_steps": 0.0,
+   "naive": 26.36651830052573,
+   "swap": 34.970945410401384,
+   "ssim": 0.8215325725335982,
+   "d_hat_px": 0.9986442926855088,
+   "d_hat_err_px": -0.0013557073144911946,
+   "selfcal": 27.915461794448014,
+   "selfcal_gauge_fixed": 32.232169338346736
+  },
+  {
+   "case": "cor1+scale0.001",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "det_scale": 1.001
+   },
+   "cor_px": 1.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.001,
+   "jit_steps": 0.0,
+   "naive": 28.224123555962073,
+   "swap": 34.880168404225145,
+   "ssim": 0.8194584561424911,
+   "d_hat_px": 0.9987895932396365,
+   "d_hat_err_px": -0.001210406760363547,
+   "selfcal": 34.48656841052183,
+   "selfcal_gauge_fixed": 34.48963939012813
+  },
+  {
+   "case": "cor1+jit1",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "ang_jitter": 0.0031415926535897933
+   },
+   "cor_px": 1.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 1.0,
+   "naive": 27.91997908543874,
+   "swap": 33.941561224908,
+   "ssim": 0.8070493325791316,
+   "d_hat_px": 1.0029398772025564,
+   "d_hat_err_px": 0.0029398772025563957,
+   "selfcal": 34.27664832385304
+  },
+  {
+   "case": "cor1+jit4",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "ang_jitter": 0.012566370614359173
+   },
+   "cor_px": 1.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 4.0,
+   "naive": 28.240530797507834,
+   "swap": 32.431827344850134,
+   "ssim": 0.780333673384316,
+   "d_hat_px": 1.0143344104599885,
+   "d_hat_err_px": 0.014334410459988511,
+   "selfcal": 32.59092882271214
+  },
+  {
+   "case": "cor4+jit4",
+   "params": {
+    "cor": 0.0028670216469162163,
+    "ang_jitter": 0.012566370614359173
+   },
+   "cor_px": 4.0,
+   "rot_steps": 0.0,
+   "det_scale": 1.0,
+   "jit_steps": 4.0,
+   "naive": 20.994312940636878,
+   "swap": 32.42342156773039,
+   "ssim": 0.7803187691509231,
+   "d_hat_px": 4.013404730040196,
+   "d_hat_err_px": 0.013404730040195822,
+   "selfcal": 32.58352129872675
+  },
+  {
+   "case": "all four",
+   "params": {
+    "cor": 0.0007167554117290541,
+    "rot": 0.0031415926535897933,
+    "det_scale": 1.001,
+    "ang_jitter": 0.0031415926535897933
+   },
+   "cor_px": 1.0,
+   "rot_steps": 1.0,
+   "det_scale": 1.001,
+   "jit_steps": 1.0,
+   "naive": 28.023762608834666,
+   "swap": 33.98285046004996,
+   "ssim": 0.8074420734168521,
+   "d_hat_px": 1.0015967955174652,
+   "d_hat_err_px": 0.001596795517465166,
+   "selfcal": 33.01228096946279,
+   "selfcal_gauge_fixed": 33.743673272780015
+  }
+ ]
+}
