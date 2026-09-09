@@ -145,17 +145,16 @@ detector-scale error and per-angle jitter, same 128 images
 ```
 
 The estimate of the shift survives all of it: across the ten combinations its
-error stays between 0.0012 and 0.0144 pixel, and it is the same size at a
-1-pixel and at a 4-pixel shift. Most of that is not calibration error at all:
-run the estimator on the *unperturbed* sinograms, where the true offset is
-zero, and it already reports −0.0012 px. Subtract that floor and what is
-genuinely left over is under 4 × 10⁻⁵ px out to a one-pixel shift, reaching
+error stays between 0.0012 and 0.0144 pixel. Most of that is not calibration
+error at all: run the estimator on the *unperturbed* sinograms, where the true
+offset is zero, and it already reports −0.0012 px. Subtract that floor and what
+is genuinely left over is under 4 × 10⁻⁵ px out to a one-pixel shift, reaching
 1.0 × 10⁻³ px only at four. The floor belongs to the images — the other test
-file gives −0.0049 px, 4.04 times larger — while the part that responds to
-the shift agrees between the two files to 6 per cent, so it belongs to the
-method ([`harness/run_estimator_floor.py`](harness/run_estimator_floor.py)).
-What self-calibration cannot do is repair the axes it does not
-estimate. With a 4-step gantry offset also present it still recovers the
+file gives −0.0049 px, 4.04 times larger — while the part that responds to the
+shift agrees between the two files to 6 per cent, so it belongs to the method
+([`harness/run_estimator_floor.py`](harness/run_estimator_floor.py)).
+
+What self-calibration cannot do is repair the axes it does not estimate. With a 4-step gantry offset also present it still recovers the
 centre-of-rotation and still leaves the rotation, which costs 7 dB against
 the oracle — a coordinate gauge that the network cannot absorb because it is
 not equivariant; re-scoring its output after undoing the rotation recovers
