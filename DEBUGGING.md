@@ -130,7 +130,7 @@ against a regularizer that sums over pixels.
 
 ---
 
-## A p-value of 3 × 10⁻²⁶ that one change of random seed reverses
+## A p-value of 4 × 10⁻³¹ that a change of random seed reverses
 
 The mismatch family has one axis that is not a coordinate gauge: per-angle
 jitter genuinely destroys measurement information. On that axis the
@@ -141,7 +141,7 @@ jitter: +0.16 dB, paired over 128 images, t = 11.9, p = 2 × 10⁻²², winning 
 trained on over the one that actually produced the data, that would have been
 worth a paragraph of its own.
 
-It is not true. The same measurement with three further jitter realizations:
+It is not true. The same measurement with seven further jitter realizations:
 
 ```
   seed    swap   selfcal   selfcal − swap   paired t          p    wins
@@ -149,23 +149,27 @@ It is not true. The same measurement with three further jitter realizations:
     1    32.32     32.50        +0.184        +13.48   3 × 10⁻²⁶  120/128
     2    32.37     32.56        +0.191        +11.58   1 × 10⁻²¹  118/128
     3    32.55     32.33        −0.220         −7.94   9 × 10⁻¹³   30/128
+    4    32.20     32.44        +0.248        +15.52   4 × 10⁻³¹  125/128
+    5    32.25     32.40        +0.149         +9.96   1 × 10⁻¹⁷  105/128
+    6    32.32     32.35        +0.032         +2.82   6 × 10⁻³    60/128
+    7    32.51     32.48        −0.035         −3.34   1 × 10⁻³    38/128
 ```
 
-Every row is overwhelming and one of them points the other way. The claim is
-about the *distribution* of jitter, so the unit of replication is the jitter
-realization, not the image — all 128 images share a single draw. Across the
-four draws: +0.08 ± 0.10 dB, t = 0.79, **p = 0.49**.
+Six point one way and two the other, and every one of them is significant.
+The claim is about the *distribution* of jitter, so the unit of replication is
+the jitter realization, not the image — all 128 images share a single draw.
+Across the eight draws: +0.09 ± 0.05 dB, t = 1.62, **p = 0.15**.
 
 Nothing about the paired test was wrong. It is a correct, very powerful test
 of "given this particular jitter, does self-calibration win", and that is not
-a question anyone has. The two p-values differ by twenty-six orders of
-magnitude and only the weak one is answering the question that was asked.
+a question anyone has. The two p-values differ by thirty orders of magnitude
+and only the weak one is answering the question that was asked.
 
 The general form: when a perturbation is drawn once and applied to every
 item, the items are not replicates of the claim. The cheapest defence is to
 re-draw the perturbation before writing the sentence down, which costs one
 more run and is the only thing that separates this paragraph from a result.
-Per-image numbers for all four draws are in
+Per-image numbers for all eight draws are in
 [`results/lpd_jitter_seed_sweep.json`](results/lpd_jitter_seed_sweep.json).
 
 ---

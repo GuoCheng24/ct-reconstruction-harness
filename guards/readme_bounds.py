@@ -269,6 +269,15 @@ def main(readme, results_md, debugging):
     check("the sign really does flip",
           any(r["gap"] < 0 for r in seeds["paired_over_images"])
           and any(r["gap"] > 0 for r in seeds["paired_over_images"]))
+    words = {4: "three", 5: "four", 6: "five", 7: "six", 8: "seven", 9: "eight", 12: "eleven"}
+    check("DEBUGGING.md says how many further draws were made",
+          f"with {words[a['n_seeds']]} further jitter realizations" in flat(debugging),
+          f"expected 'with {words[a['n_seeds']]} further jitter realizations'")
+    gap = math.log10(a["p"] / min(r["p_t"] for r in seeds["paired_over_images"]))
+    names = {26: "twenty-six", 29: "thirty", 30: "thirty", 31: "thirty-one"}
+    check("the gap between the two p-values",
+          f"differ by {names[round(gap)]} orders of magnitude" in flat(debugging),
+          f"the two p-values differ by 10^{gap:.1f}")
 
 
 def read_docs():
@@ -301,7 +310,10 @@ if __name__ == "__main__":
                           ("a scalar bound", (readme.replace("costs 14.3 dB", "costs 13.9 dB"),
                                               results_md, debugging)),
                           ("the seed sweep", (readme, results_md,
-                                              debugging.replace("p = 0.49", "p = 0.0049"))),
+                                              debugging.replace("p = 0.15", "p = 0.0015"))),
+                          ("how many jitter draws there were",
+                           (readme, results_md,
+                            debugging.replace("seven further", "three further"))),
                           ("the headline table", (readme.replace("33.00 ± 0.33", "33.36 ± 0.33"),
                                                   results_md, debugging)),
                           ("the paired gain", (readme.replace("wins 125/128", "wins 128/128"),
