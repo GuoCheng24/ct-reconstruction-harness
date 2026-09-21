@@ -1,4 +1,4 @@
-# inverse-problems-from-scratch
+# ct-reconstruction-harness
 
 [![test](https://github.com/GuoCheng24/ct-reconstruction-harness/actions/workflows/test.yml/badge.svg)](https://github.com/GuoCheng24/ct-reconstruction-harness/actions/workflows/test.yml)
 
