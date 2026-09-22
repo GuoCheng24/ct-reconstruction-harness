@@ -25,11 +25,11 @@ wins, n, mean, se = P["wins"], P["n"], P["mean"], P["se"]
 def chart(ax, accent):
     ax.text(0.78, 3.42, f"{tv:.2f} dB", fontsize=44, fontweight="bold", color="#17181a",
             family=SANS)
-    ax.text(3.35, 3.42, f"reproducing the published {published:.2f}", fontsize=34,
+    ax.text(3.62, 3.42, f"reproducing the published {published:.2f}", fontsize=34,
             color="#55585c", family=SANS)
     ax.text(0.78, 2.62, f"+{mean:.2f} dB", fontsize=44, fontweight="bold", color="#1a7f37",
             family=SANS)
-    ax.text(3.35, 2.62, f"paired gain, se {se:.2f}, found by the loop", fontsize=34,
+    ax.text(3.62, 2.62, f"paired gain, se {se:.2f}, found by the loop", fontsize=34,
             color="#55585c", family=SANS)
 
     # one tile per held-out image, so 125 of 128 is a shape and not a claim
