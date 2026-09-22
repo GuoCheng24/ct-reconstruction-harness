@@ -1,27 +1,60 @@
-"""Generate the 1280x640 social preview card. Regenerate with:  python .github/assets/make_social_preview.py"""
-import matplotlib; matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
+"""Generate the GitHub social-preview card (1200x630). Reproducible: python3 make_social_preview.py
 
-INK, MUTED, ACCENT, BG = "#14181f", "#5b6472", "#0b6e4f", "#fbfaf7"
-fig = plt.figure(figsize=(12.8, 6.4), dpi=100); fig.patch.set_facecolor(BG)
-ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-ax.add_patch(FancyBboxPatch((0.035, 0.055), 0.93, 0.89, boxstyle="round,pad=0,rounding_size=0.02",
-                            fc="white", ec="#e4e2dd", lw=1.4))
-ax.text(0.075, 0.80, "ct-reconstruction-harness", fontsize=34, weight="bold", color=INK, va="center")
-ax.text(0.075, 0.705, "Reproduce the LoDoPaB-CT baselines from scratch, then beat one with a paired test",
-        fontsize=15.5, color=MUTED, va="center")
-rows = [("FBP, official operator", "30.52", "n = 3553, published 30.19 on the challenge split"),
-        ("TV-Adam, official recipe", "33.00", "n = 128, published 33.36, gamma untouched"),
-        ("TGV (found by the loop)", "+0.70", "dB paired over the recipe, t = 16, wins 125/128")]
-y = 0.545
-for name, num, note in rows:
-    ax.text(0.075, y, name, fontsize=15, color=INK, va="center")
-    ax.text(0.455, y, num, fontsize=21, weight="bold", color=ACCENT, va="center", ha="right")
-    ax.text(0.485, y, note, fontsize=12.5, color=MUTED, va="center")
-    y -= 0.105
-ax.plot([0.075, 0.925], [0.20, 0.20], color="#e4e2dd", lw=1.2)
-ax.text(0.075, 0.135, "Every guard is run against a deliberately broken operator and must fail for the right reason.",
-        fontsize=13, color=MUTED, va="center")
-fig.savefig("/dev/stdout" if False else __file__.replace("make_social_preview.py", "social-preview.png"),
-            facecolor=BG); print("wrote social-preview.png")
+The finding is a paired comparison, and what makes a paired comparison convincing is not its mean
+but how one-sided it is: 125 of 128 held-out images. So the card counts them out as tiles, which
+reads as a shape at the 360 px a Slack unfurl gives a card, with the reproduction numbers above.
+
+Everything is read from results/evaluation_n128.json, the file guards/readme_bounds.py already
+holds the README to.
+"""
+import json
+import pathlib
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+from cardkit import SANS, card  # noqa: E402
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+D = json.loads((ROOT / "results/evaluation_n128.json").read_text())
+P = D["paired"]["tgv_minus_tv_aniso"]
+tv = D["tv_aniso_official_recipe"]["psnr_mean"]
+published = D["published_challenge_set"]["TV"]
+wins, n, mean, se = P["wins"], P["n"], P["mean"], P["se"]
+
+
+def chart(ax, accent):
+    ax.text(0.78, 3.42, f"{tv:.2f} dB", fontsize=44, fontweight="bold", color="#17181a",
+            family=SANS)
+    ax.text(3.35, 3.42, f"reproducing the published {published:.2f}", fontsize=34,
+            color="#55585c", family=SANS)
+    ax.text(0.78, 2.62, f"+{mean:.2f} dB", fontsize=44, fontweight="bold", color="#1a7f37",
+            family=SANS)
+    ax.text(3.35, 2.62, f"paired gain, se {se:.2f}, found by the loop", fontsize=34,
+            color="#55585c", family=SANS)
+
+    # one tile per held-out image, so 125 of 128 is a shape and not a claim
+    cols, x0, y0, s, gap = 32, 0.80, 2.18, 0.23, 0.05
+    for i in range(n):
+        r, c = divmod(i, cols)
+        ax.add_patch(plt_rect(x0 + c * (s + gap), y0 - r * (s + gap), s, s,
+                              "#1a7f37" if i < wins else "#cf222e"))
+    ax.text(0.78, 0.98, f"{wins} of {n} held-out images improve", fontsize=34,
+            fontweight="bold", color="#17181a", family=SANS)
+
+
+def plt_rect(x, y, w, h, c):
+    import matplotlib.pyplot as plt
+    return plt.Rectangle((x, y), w, h, color=c, zorder=3)
+
+
+out = card(
+    out=str(pathlib.Path(__file__).parent / "social-preview.png"),
+    accent="#1a7f37", badge="C",
+    kicker="LOW-DOSE CT  ·  built from the forward operator up",
+    headline="Reproduce the baseline, then beat it",
+    evidence="LoDoPaB-CT test split, official metric convention",
+    chart=chart,
+    footer="github.com/GuoCheng24/ct-reconstruction-harness",
+    headline_size=44,
+)
+print(f"written {pathlib.Path(out).name}  TV {tv:.2f} vs {published:.2f}, +{mean:.2f} dB, {wins}/{n}")
