@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If this was useful in your work, please cite it."
+title: "Reproducing a low-dose CT baseline from the forward operator up, then beating it with a paired test"
+abstract: "Low-dose CT reconstruction built from a GPU Radon transform with an autodiff adjoint: a scoring harness that owns the ground truth, a parametrized family of operator mismatches with guards that must fail on deliberately broken operators, and a search loop that proposes variants and confirms them on held-out data. The reproduction is carried to the point where the seven differences between the method as described and the method as run are written down. A TGV variant found by the loop beats the matched TV recipe by 0.70 +/- 0.04 dB, paired on 128 held-out images, winning on 125. The first published version of the table was wrong and the correction is kept in place."
+type: software
+authors:
+  - family-names: Cheng
+    given-names: Guo
+    affiliation: "Hangzhou Institute of Medicine, Chinese Academy of Sciences, Hangzhou, China; Hangzhou Institute for Advanced Study, University of Chinese Academy of Sciences, Hangzhou, China"
+    orcid: "https://orcid.org/0009-0006-7813-0114"
+repository-code: "https://github.com/GuoCheng24/ct-reconstruction-harness"
+license: MIT
+version: 1.0.0
+date-released: 2026-09-15
+keywords:
+  - computed tomography
+  - inverse problems
+  - reproducibility
+  - operator mismatch
+  - self-calibration
+  - total generalized variation
