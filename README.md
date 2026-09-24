@@ -229,6 +229,14 @@ files alone.
 The methodology the loop follows is written up separately in
 [breakthrough-harness](https://github.com/GuoCheng24/breakthrough-harness).
 
+## Other things from the same desk
+
+- [groundwork](https://github.com/GuoCheng24/groundwork) — a research pipeline for coding agents whose first stage can return NO-GO; on PyPI as `groundwork-research`
+- [topocheck](https://github.com/GuoCheng24/topocheck) — sanity checks for topology-aware segmentation claims, including the random-repair baseline
+- [doubleblind](https://github.com/GuoCheng24/doubleblind) — re-derive every number in a README or paper from committed files, and brief a reviewer that was told nothing
+
+More at [github.com/GuoCheng24](https://github.com/GuoCheng24).
+
 ## License
 
 MIT.
